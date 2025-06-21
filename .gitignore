@@ -1,3 +1,4 @@
 .idea/
 venv/
 investments.sqlite3
+investments.csv

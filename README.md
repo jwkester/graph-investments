@@ -3,9 +3,9 @@
 Use the following to build and run:
 
 ```shell
-docker build -t investment-app .
+docker-compose build
 ```
 
 ```shell
-docker run -p 5000:5000 investment-app
+docker-compose up
 ```

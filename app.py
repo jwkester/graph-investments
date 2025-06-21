@@ -11,16 +11,26 @@ DB_PATH = os.environ.get("DB_PATH", "investments.sqlite3")
 
 
 def get_all_investment_names():
+    if not os.path.exists(DB_PATH):
+        raise FileNotFoundError(f"Database file not found at {DB_PATH}")
+
     conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query("SELECT DISTINCT Investment FROM investments", conn)
-    conn.close()
-    return sorted(df['Investment'].dropna().unique())
+    try:
+        df = pd.read_sql_query("SELECT DISTINCT Investment FROM investments", conn)
+        return sorted(df['Investment'].dropna().unique())
+    finally:
+        conn.close()
 
 
 def query_data(start_date=None, end_date=None, selected_names=None):
+    if not os.path.exists(DB_PATH):
+        raise FileNotFoundError(f"Database file not found at {DB_PATH}")
+
     conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query("SELECT * FROM investments", conn)
-    conn.close()
+    try:
+        df = pd.read_sql_query("SELECT * FROM investments", conn)
+    finally:
+        conn.close()
 
     df.rename(columns={
         'Date': 'date',
@@ -31,6 +41,7 @@ def query_data(start_date=None, end_date=None, selected_names=None):
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df['total'] = pd.to_numeric(df['total'], errors='coerce')
     df = df.dropna(subset=['date', 'total'])
+    df = df[df['date'].dt.year.isin([2024, 2025])]
 
     if start_date:
         df = df[df['date'] >= pd.to_datetime(start_date)]
@@ -85,4 +96,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True, use_reloader=True)

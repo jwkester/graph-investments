@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  investment_app:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./investments.sqlite3:/data/investments.sqlite3:ro  # ✅ read-only mount
+    environment:
+      - DB_PATH=/data/investments.sqlite3
+    restart: unless-stopped
