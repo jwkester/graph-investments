@@ -126,10 +126,9 @@ def index():
     show_total_portfolio = 'show_total_portfolio' in request.form
     show_total_non_cash = 'show_total_non_cash' in request.form
     all_names = get_all_investment_names()
-
     try:
-        full_df = query_data()
-        df = query_data(start_date, end_date, selected_names)
+        full_df = query_data(start_date=start_date, end_date=end_date)  # filter by date only
+        df = query_data(start_date, end_date, selected_names)  # filter by date and investment
         graphs = generate_graphs(df, full_df, show_total_portfolio, show_total_non_cash)
     except Exception as e:
         graphs = [f"<p>Error: {str(e)}</p>"]
