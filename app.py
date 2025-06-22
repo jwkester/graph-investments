@@ -53,10 +53,10 @@ def query_data(start_date=None, end_date=None, selected_names=None):
     return df
 
 
-def generate_graphs(df):
+def generate_graphs(filtered_df, full_df, show_total_portfolio=False, show_total_non_cash=False):
     graphs_html = []
-    for investment in df['investment_name'].unique():
-        inv_df = df[df['investment_name'] == investment].copy()
+    for investment in filtered_df['investment_name'].unique():
+        inv_df = filtered_df[filtered_df['investment_name'] == investment].copy()
         inv_df.sort_values('date', inplace=True)
 
         fig = go.Figure()
@@ -75,6 +75,46 @@ def generate_graphs(df):
             height=400
         )
         graphs_html.append(pio.to_html(fig, full_html=False))
+
+    if show_total_portfolio:
+        total_df = full_df.groupby('date')['total'].sum().reset_index()
+        fig_total = go.Figure()
+        fig_total.add_trace(go.Scatter(
+            x=total_df['date'],
+            y=total_df['total'],
+            mode='lines+markers',
+            name='Total Portfolio'
+        ))
+        fig_total.update_layout(
+            title="Total Portfolio Over Time",
+            xaxis_title="Date",
+            yaxis_title="Total Value",
+            xaxis=dict(tickformat="%m-%d-%y"),
+            margin=dict(l=40, r=40, t=40, b=40),
+            height=400
+        )
+        graphs_html.append(pio.to_html(fig_total, full_html=False))
+
+    if show_total_non_cash:
+        non_cash_df = full_df[full_df['investment_name'] != 'VMFXX']
+        non_cash_sum = non_cash_df.groupby('date')['total'].sum().reset_index()
+        fig_non_cash = go.Figure()
+        fig_non_cash.add_trace(go.Scatter(
+            x=non_cash_sum['date'],
+            y=non_cash_sum['total'],
+            mode='lines+markers',
+            name='Total Non-Cash'
+        ))
+        fig_non_cash.update_layout(
+            title="Total Non-Cash Investments Over Time",
+            xaxis_title="Date",
+            yaxis_title="Total Value",
+            xaxis=dict(tickformat="%m-%d-%y"),
+            margin=dict(l=40, r=40, t=40, b=40),
+            height=400
+        )
+        graphs_html.append(pio.to_html(fig_non_cash, full_html=False))
+
     return graphs_html
 
 
@@ -83,16 +123,20 @@ def index():
     start_date = request.form.get("start_date")
     end_date = request.form.get("end_date")
     selected_names = request.form.getlist("investment_name")
+    show_total_portfolio = 'show_total_portfolio' in request.form
+    show_total_non_cash = 'show_total_non_cash' in request.form
     all_names = get_all_investment_names()
 
     try:
+        full_df = query_data()
         df = query_data(start_date, end_date, selected_names)
-        graphs = generate_graphs(df)
+        graphs = generate_graphs(df, full_df, show_total_portfolio, show_total_non_cash)
     except Exception as e:
         graphs = [f"<p>Error: {str(e)}</p>"]
 
     return render_template("index.html", graphs=graphs, start_date=start_date,
-                           end_date=end_date, all_names=all_names, selected_names=selected_names)
+                           end_date=end_date, all_names=all_names, selected_names=selected_names,
+                           show_total_portfolio=show_total_portfolio, show_total_non_cash=show_total_non_cash)
 
 
 if __name__ == "__main__":
