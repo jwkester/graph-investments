@@ -16,6 +16,25 @@ if [ ! -f "$CSV_FILE" ]; then
   exit 1
 fi
 
+# Check if SQLite DB file exists and prompt for deletion
+if [ -f "$DB_FILE" ]; then
+  read -p "The database file '$DB_FILE' already exists. Delete and recreate it? (y/n) " choice
+  case "$choice" in
+    y|Y )
+      echo "Deleting '$DB_FILE'..."
+      rm "$DB_FILE"
+      ;;
+    n|N )
+      echo "Keeping '$DB_FILE'. Aborting to avoid overwriting."
+      exit 1
+      ;;
+    * )
+      echo "Invalid response. Aborting."
+      exit 1
+      ;;
+  esac
+fi
+
 # Change to the directory containing the CSV
 CSV_DIR=$(dirname "$CSV_FILE")
 CSV_NAME=$(basename "$CSV_FILE")
