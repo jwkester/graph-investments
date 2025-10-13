@@ -41,7 +41,7 @@ def query_data(start_date=None, end_date=None, selected_names=None):
     df['date'] = pd.to_datetime(df['date'], errors='coerce')
     df['total'] = pd.to_numeric(df['total'], errors='coerce')
     df = df.dropna(subset=['date', 'total'])
-    df = df[df['date'].dt.year.isin([2024, 2025])]
+    # df = df[df['date'].dt.year.isin([2024, 2025])]
 
     if start_date:
         df = df[df['date'] >= pd.to_datetime(start_date)]
