@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import numpy as np
 
 import pandas as pd
 import plotly.graph_objs as go
@@ -66,6 +67,20 @@ def generate_graphs(filtered_df, full_df, show_total_portfolio=False, show_total
             mode='lines+markers',
             name=investment
         ))
+        # Add linear trendline for this investment
+        if len(inv_df) >= 2:
+            x_num = inv_df['date'].map(pd.Timestamp.toordinal).to_numpy()
+            y = inv_df['total'].to_numpy()
+            m, b = np.polyfit(x_num, y, 1)
+            y_trend = m * x_num + b
+
+            fig.add_trace(go.Scatter(
+                x=inv_df['date'].dt.strftime('%Y-%m-%d'),
+                y=y_trend,
+                mode='lines',
+                name=f"{investment} trend",
+                line=dict(dash='dash')
+            ))
         fig.update_layout(
             title=f"Total Value Over Time: {investment}",
             xaxis_title="Date",
@@ -78,6 +93,7 @@ def generate_graphs(filtered_df, full_df, show_total_portfolio=False, show_total
 
     if show_total_portfolio:
         total_df = full_df.groupby('date')['total'].sum().reset_index()
+        total_df.sort_values('date', inplace=True)
         fig_total = go.Figure()
         fig_total.add_trace(go.Scatter(
             x=total_df['date'],
@@ -85,6 +101,20 @@ def generate_graphs(filtered_df, full_df, show_total_portfolio=False, show_total
             mode='lines+markers',
             name='Total Portfolio'
         ))
+        # Add linear trendline for total portfolio
+        if len(total_df) >= 2:
+            x_num = total_df['date'].map(pd.Timestamp.toordinal).to_numpy()
+            y = total_df['total'].to_numpy()
+            m, b = np.polyfit(x_num, y, 1)
+            y_trend = m * x_num + b
+
+            fig_total.add_trace(go.Scatter(
+                x=total_df['date'],
+                y=y_trend,
+                mode='lines',
+                name='Total Portfolio trend',
+                line=dict(dash='dash')
+            ))
         fig_total.update_layout(
             title="Total Portfolio Over Time",
             xaxis_title="Date",
@@ -98,6 +128,7 @@ def generate_graphs(filtered_df, full_df, show_total_portfolio=False, show_total
     if show_total_non_cash:
         non_cash_df = full_df[full_df['investment_name'] != 'VMFXX']
         non_cash_sum = non_cash_df.groupby('date')['total'].sum().reset_index()
+        non_cash_sum.sort_values('date', inplace=True)
         fig_non_cash = go.Figure()
         fig_non_cash.add_trace(go.Scatter(
             x=non_cash_sum['date'],
@@ -105,6 +136,20 @@ def generate_graphs(filtered_df, full_df, show_total_portfolio=False, show_total
             mode='lines+markers',
             name='Total Non-Cash'
         ))
+        # Add linear trendline for total non-cash
+        if len(non_cash_sum) >= 2:
+            x_num = non_cash_sum['date'].map(pd.Timestamp.toordinal).to_numpy()
+            y = non_cash_sum['total'].to_numpy()
+            m, b = np.polyfit(x_num, y, 1)
+            y_trend = m * x_num + b
+
+            fig_non_cash.add_trace(go.Scatter(
+                x=non_cash_sum['date'],
+                y=y_trend,
+                mode='lines',
+                name='Total Non-Cash trend',
+                line=dict(dash='dash')
+            ))
         fig_non_cash.update_layout(
             title="Total Non-Cash Investments Over Time",
             xaxis_title="Date",
